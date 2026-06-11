@@ -1,93 +1,199 @@
-const socket = io();
-let myRoomCode = "";
-let myColor = "w"; // Default to white
-const game = new Chess(); 
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Multiplayer Chess</title>
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <style>
+        /* The Main Background */
+        body { 
+            background-color: #312e2b; 
+            color: #ffffff; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
 
-var board = Chessboard('myBoard', {
-    draggable: true,
-    dropOffBoard: 'snapback',
-    position: 'start',
-    onDragStart: handleDragStart,
-    onDrop: handleMove
-});
+        /* NEW: The Split Screen Layout */
+        #lobby {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 60px; /* Space between the left and right side */
+            max-width: 1000px;
+            width: 100%;
+        }
 
-// NEW: Receive our color from the server
-socket.on('playerColor', (color) => {
-    myColor = color;
-    // If we are black, physically flip the board!
-    if (myColor === 'b') {
-        board.orientation('black');
-    }
-});
+        /* The Left Side (Controls) */
+        .controls-panel { 
+            background-color: #262421; 
+            padding: 40px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+        }
 
-// NEW: Strict dragging rules
-function handleDragStart(source, piece, position, orientation) {
-    if (game.game_over()) return false;
+        h1 { 
+            font-weight: 800; 
+            letter-spacing: 1.5px; 
+            text-transform: uppercase; 
+            color: #81b64c; 
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 28px;
+        }
 
-    // 1. You cannot move if it is not your turn
-    if (game.turn() !== myColor) return false;
+        /* The Right Side (Text and Branding) */
+        .branding-panel {
+            max-width: 450px;
+            text-align: left;
+        }
 
-    // 2. You cannot touch the opponent's pieces
-    if ((myColor === 'w' && piece.search(/^b/) !== -1) ||
-        (myColor === 'b' && piece.search(/^w/) !== -1)) {
-        return false;
-    }
-}
+        .branding-panel h2 {
+            font-size: 46px;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #ffffff;
+        }
 
-function handleMove(source, target) {
-    let move = game.move({
-        from: source,
-        to: target,
-        promotion: 'q' 
-    });
+        /* Highlight the word "Indian" in green */
+        .branding-panel h2 span {
+            color: #81b64c;
+        }
 
-    if (move === null) return 'snapback';
+        .branding-panel p {
+            font-size: 20px;
+            color: #a7a6a2;
+            line-height: 1.4;
+            margin-bottom: 30px;
+        }
 
-    socket.emit('move', {
-        room: myRoomCode,
-        move: { source: source, target: target }
-    });
+        /* Standard Buttons */
+        button { 
+            background-color: #81b64c; 
+            color: white; 
+            border: none; 
+            padding: 15px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            width: 100%; 
+            transition: background 0.2s, transform 0.1s; 
+            box-sizing: border-box;
+        }
+        
+        button:hover { 
+            background-color: #92c959; 
+            transform: translateY(-2px);
+        }
 
-    checkGameStatus();
-}
+        /* NEW: The 'Get Started' Action Button */
+        #getStartedBtn {
+            background-color: #ffffff;
+            color: #312e2b;
+            font-size: 18px;
+            padding: 18px 30px;
+            width: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+        }
 
-socket.on('move', function(moveData) {
-    game.move({
-        from: moveData.source,
-        to: moveData.target,
-        promotion: 'q'
-    });
-    board.position(game.fen()); 
-    checkGameStatus();
-});
+        #getStartedBtn:hover {
+            background-color: #e0e0e0;
+            transform: translateY(-3px);
+        }
 
-function checkGameStatus() {
-    if (game.in_checkmate()) {
-        alert("Game Over! Checkmate.");
-    } else if (game.in_draw() || game.in_stalemate()) {
-        alert("Game Over! Draw.");
-    }
-}
+        .divider { color: #888888; font-size: 14px; margin: 20px 0; font-weight: bold; }
 
-// --- LOBBY LOGIC ---
-document.getElementById('createBtn').addEventListener('click', () => {
-    socket.emit('createRoom');
-});
+        input { 
+            background-color: #312e2b;
+            color: white;
+            border: 2px solid #403d39;
+            padding: 15px; 
+            font-size: 18px; 
+            border-radius: 8px; 
+            width: 100%; 
+            margin-bottom: 15px; 
+            text-align: center; 
+            box-sizing: border-box;
+            text-transform: uppercase;
+            font-weight: bold;
+            outline: none;
+            transition: border-color 0.2s;
+        }
 
-document.getElementById('joinBtn').addEventListener('click', () => {
-    const code = document.getElementById('roomInput').value.toUpperCase();
-    if (code) {
-        socket.emit('joinRoom', code);
-    }
-});
+        input:focus { border-color: #81b64c; }
+        input::placeholder { color: #666666; font-weight: normal; }
 
-socket.on('roomJoined', (code) => {
-    myRoomCode = code;
-    document.getElementById('lobby').style.display = 'none';
-    document.getElementById('gameArea').style.display = 'block';
-    document.getElementById('roomDisplay').innerText = "Room Code: " + code;
-});
+        /* The Game Area */
+        #gameArea { display: none; text-align: center; width: 100%; max-width: 450px;}
+        #roomDisplay { 
+            background-color: #262421; 
+            padding: 10px; 
+            border-radius: 8px; 
+            display: inline-block; 
+            margin-bottom: 20px; 
+            color: #81b64c;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
 
-socket.on('errorMsg', (msg) => {
-    alert(msg);
-});
+        #myBoard { 
+            border-radius: 4px; 
+            overflow: hidden; 
+            box-shadow: 0 15px 30px rgba(0,0,0,0.6); 
+        }
+
+        /* Mobile Responsiveness: Stack them on top of each other if the screen is small */
+        @media (max-width: 768px) {
+            #lobby {
+                flex-direction: column-reverse;
+                gap: 40px;
+                text-align: center;
+            }
+            .branding-panel { text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="lobby">
+        
+        <div class="controls-panel">
+            <h1>Multiplayer Chess</h1>
+            <button id="createBtn">Create Private Game</button>
+            <p class="divider">— OR —</p>
+            <input type="text" id="roomInput" placeholder="Enter 4-Letter Code" maxlength="4">
+            <button id="joinBtn">Join Game</button>
+        </div>
+
+        <div class="branding-panel">
+            <h2>Play First <span>Indian</span> Chess On A Site!</h2>
+            <p>play with playerss and train your chess performance!</p>
+            
+            <button id="getStartedBtn" onclick="document.getElementById('createBtn').click()">Get Started!</button>
+        </div>
+
+    </div>
+
+    <div id="gameArea">
+        <h3 id="roomDisplay"></h3>
+        <div id="myBoard"></div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="client.js"></script>
+</body>
+</html>
