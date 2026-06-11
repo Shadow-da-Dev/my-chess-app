@@ -1,8 +1,8 @@
 const socket = io();
 let myRoomCode = "";
-const game = new Chess(); // Create an instance of the chess rules engine
+let myColor = "w"; // Default to white
+const game = new Chess(); 
 
-// 1. Setup the visual board
 var board = Chessboard('myBoard', {
     draggable: true,
     dropOffBoard: 'snapback',
@@ -11,30 +11,38 @@ var board = Chessboard('myBoard', {
     onDrop: handleMove
 });
 
-// Prevent moving pieces if the game is over or it's not your turn
+// NEW: Receive our color from the server
+socket.on('playerColor', (color) => {
+    myColor = color;
+    // If we are black, physically flip the board!
+    if (myColor === 'b') {
+        board.orientation('black');
+    }
+});
+
+// NEW: Strict dragging rules
 function handleDragStart(source, piece, position, orientation) {
     if (game.game_over()) return false;
 
-    // Only let White move white pieces and Black move black pieces
-    if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
-        (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+    // 1. You cannot move if it is not your turn
+    if (game.turn() !== myColor) return false;
+
+    // 2. You cannot touch the opponent's pieces
+    if ((myColor === 'w' && piece.search(/^b/) !== -1) ||
+        (myColor === 'b' && piece.search(/^w/) !== -1)) {
         return false;
     }
 }
 
-// 2. Handle dragging/dropping a piece
 function handleMove(source, target) {
-    // Check if the move is legal in the rules engine
     let move = game.move({
         from: source,
         to: target,
-        promotion: 'q' // Automatically promote pawns to a Queen for simplicity
+        promotion: 'q' 
     });
 
-    // If the move is illegal, snap the piece back instantly
     if (move === null) return 'snapback';
 
-    // If legal, broadcast it to the opponent via our private room
     socket.emit('move', {
         room: myRoomCode,
         move: { source: source, target: target }
@@ -43,18 +51,16 @@ function handleMove(source, target) {
     checkGameStatus();
 }
 
-// 3. Receive a move from our opponent
 socket.on('move', function(moveData) {
     game.move({
         from: moveData.source,
         to: moveData.target,
         promotion: 'q'
     });
-    board.position(game.fen()); // Update the visual board position safely
+    board.position(game.fen()); 
     checkGameStatus();
 });
 
-// 4. Function to check for Checkmate / Stalemate
 function checkGameStatus() {
     if (game.in_checkmate()) {
         alert("Game Over! Checkmate.");
