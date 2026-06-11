@@ -4,81 +4,226 @@
     <title>Multiplayer Chess</title>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     
     <style>
-        body { background: #312e2b; color: white; font-family: sans-serif; margin: 0; display: flex; height: 100vh; }
-        
-        /* Sidebar */
-        #sidebar { width: 220px; background: #262421; padding: 20px; display: flex; flex-direction: column; }
-        .nav-link { cursor: pointer; padding: 15px; color: #ccc; font-weight: bold; border-radius: 8px; }
-        .nav-link:hover { background: #3d3b39; color: white; }
-        
-        /* Screens */
-        #main { flex-grow: 1; display: flex; justify-content: center; align-items: center; }
-        .screen { display: none; text-align: center; }
-        .active { display: block; }
-        
-        button { background: #81b64c; border: none; padding: 12px 25px; color: white; cursor: pointer; border-radius: 5px; font-weight: bold; margin: 5px; }
-        input { padding: 10px; border-radius: 5px; border: 1px solid #403d39; background: #262421; color: white; }
+        body { background-color: #312e2b; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        #sidebar { width: 220px; background-color: #262421; padding: 20px 10px; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.4); z-index: 100; }
+        .brand-logo { font-size: 24px; font-weight: 900; color: #81b64c; text-align: center; margin-bottom: 40px; text-transform: uppercase; letter-spacing: 1px; }
+        .sidebar-nav { flex-grow: 1; }
+        .sidebar-bottom { border-top: 1px solid #403d39; padding-top: 15px; }
+        .menu-item { display: flex; align-items: center; padding: 15px 20px; color: #c3c2c1; text-decoration: none; font-size: 18px; font-weight: bold; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: all 0.2s ease; }
+        .menu-item i { margin-right: 15px; font-size: 22px; width: 30px; text-align: center; }
+        .menu-item:hover { background-color: #3d3b39; color: #ffffff; transform: translateX(5px); }
+        .menu-item.active { background-color: #312e2b; color: #ffffff; }
+        .menu-item.active i { color: #81b64c; }
+
+        #main-content { flex-grow: 1; padding: 20px; display: flex; justify-content: center; align-items: center; overflow-y: auto; }
+        .screen { display: none; width: 100%; align-items: center; justify-content: center; }
+        .active-screen { display: flex; }
+
+        #landingScreen { flex-direction: row; gap: 60px; max-width: 1000px; }
+        .hero-graphic { background-color: #262421; width: 300px; height: 300px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 100px; }
+        .branding-panel { max-width: 450px; text-align: left; }
+        .branding-panel h2 { font-size: 46px; font-weight: 900; line-height: 1.1; margin: 0 0 15px 0; }
+        .branding-panel p { font-size: 20px; color: #a7a6a2; line-height: 1.4; margin-bottom: 30px; }
+
+        .menu-card { background-color: #262421; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 100%; max-width: 350px; text-align: center; flex-direction: column; }
+        .menu-card h1 { color: #81b64c; margin: 0 0 25px 0; font-size: 28px; text-transform: uppercase; }
+
+        button { background-color: #81b64c; color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; transition: background 0.2s, transform 0.1s; margin-bottom: 10px; }
+        button:hover { background-color: #92c959; transform: translateY(-2px); }
+        .secondary-btn { background-color: #403d39; }
+        .secondary-btn:hover { background-color: #524f4a; }
+        #getStartedBtn { background-color: #ffffff; color: #312e2b; font-size: 18px; padding: 18px 30px; width: auto; border-radius: 10px; }
+        #getStartedBtn:hover { background-color: #e0e0e0; }
+
+        input { background-color: #312e2b; color: white; border: 2px solid #403d39; padding: 15px; font-size: 16px; border-radius: 8px; width: 100%; margin-bottom: 15px; box-sizing: border-box; outline: none; text-align: center; font-weight: bold; }
+        input:focus { border-color: #81b64c; }
+        .divider { color: #888888; font-size: 14px; margin: 15px 0; font-weight: bold; }
+
+        #gameArea { flex-direction: column; max-width: 450px; }
+        #roomDisplay { background-color: #262421; padding: 10px; border-radius: 8px; color: #81b64c; margin-bottom: 20px; }
+        #myBoard { border-radius: 4px; overflow: hidden; box-shadow: 0 15px 30px rgba(0,0,0,0.6); }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            #sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: space-around; padding: 10px 0; }
+            .brand-logo, .sidebar-bottom { display: none; } 
+            .sidebar-nav { display: flex; width: 100%; justify-content: space-around; }
+            .menu-item { padding: 10px; margin: 0; font-size: 14px; }
+            .menu-item i { margin-right: 5px; font-size: 18px; }
+            #landingScreen { flex-direction: column; text-align: center; }
+            .branding-panel { text-align: center; }
+        }
     </style>
 </head>
 <body>
 
     <nav id="sidebar">
-        <h2 style="color: #81b64c;">♔ CHESS</h2>
-        <div class="nav-link" onclick="showScreen('landing')"><i class="fa fa-home"></i> Play</div>
-        <div class="nav-link" onclick="showScreen('login')"><i class="fa fa-user"></i> Login</div>
+        <div class="brand-logo">♔ CHESS</div>
+        
+        <div class="sidebar-nav">
+            <a class="menu-item active" onclick="changeScreen('landingScreen', this)">
+                <i class="fa-solid fa-hand-pointer"></i> <span id="nav-play">Play</span>
+            </a>
+            <a class="menu-item" onclick="alert('Puzzles coming soon!')">
+                <i class="fa-solid fa-puzzle-piece"></i> <span id="nav-puzzles">Puzzles</span>
+            </a>
+            <a class="menu-item" onclick="alert('Lessons coming soon!')">
+                <i class="fa-solid fa-graduation-cap"></i> <span id="nav-learn">Learn</span>
+            </a>
+        </div>
+
+        <div class="sidebar-bottom">
+            <a class="menu-item" onclick="changeScreen('loginScreen', this)">
+                <i class="fa-solid fa-right-to-bracket"></i> <span id="nav-login">Login</span>
+            </a>
+            <a class="menu-item" onclick="changeScreen('signupScreen', this)">
+                <i class="fa-solid fa-user-plus"></i> <span id="nav-signup">Sign Up</span>
+            </a>
+            <a class="menu-item" onclick="changeScreen('languageScreen', this)">
+                <i class="fa-solid fa-globe"></i> <span id="nav-lang">Language</span>
+            </a>
+        </div>
     </nav>
 
-    <div id="main">
-        <div id="landing" class="screen active">
-            <div id="board1" style="width: 300px; margin: 0 auto;"></div>
-            <h2>Play Indian Chess</h2>
-            <button onclick="showScreen('login')">Get Started!</button>
-            <button onclick="animateBoard()" style="background:#403d39">Watch Checkmate</button>
+    <main id="main-content">
+        
+        <div id="landingScreen" class="screen active-screen">
+            <div class="hero-graphic">♞</div>
+            <div class="branding-panel">
+                <h2 id="landing-title">Play First <span style="color:#81b64c;">Indian</span> Chess On A Site!</h2>
+                <p id="landing-sub">play with playerss and train your chess performance!</p>
+                <button id="getStartedBtn" onclick="changeScreen('loginScreen')"><span id="landing-btn">Get Started!</span></button>
+            </div>
         </div>
 
-        <div id="login" class="screen">
-            <h2>Login</h2>
-            <input type="text" id="user" placeholder="Username"><br>
-            <button onclick="showScreen('dashboard')">Login</button>
+        <div id="loginScreen" class="screen">
+            <div class="menu-card">
+                <h1 id="login-title">Player Login</h1>
+                <input type="text" id="usernameInput" placeholder="Enter Username">
+                <input type="password" id="passwordInput" placeholder="Password">
+                <button onclick="handleLogin()"><span id="login-btn">Login</span></button>
+                <p class="divider" id="login-or">Don't have an account?</p>
+                <button class="secondary-btn" onclick="changeScreen('signupScreen')"><span id="login-create">Create Account</span></button>
+            </div>
         </div>
 
-        <div id="dashboard" class="screen">
-            <h1>Welcome!</h1>
-            <button id="createBtn">Create Private Game</button>
+        <div id="signupScreen" class="screen">
+            <div class="menu-card">
+                <h1 id="signup-title">Sign Up</h1>
+                <input type="text" id="newUsername" placeholder="Choose a Username">
+                <input type="email" id="newEmail" placeholder="Email Address">
+                <input type="password" id="newPassword" placeholder="Create Password">
+                <button onclick="changeScreen('loginScreen');"><span id="signup-btn">Register</span></button>
+            </div>
         </div>
-    </div>
+
+        <div id="languageScreen" class="screen">
+            <div class="menu-card">
+                <h1 id="lang-title">Choose Language</h1>
+                <button onclick="setLanguage('en')">English</button>
+                <button class="secondary-btn" onclick="setLanguage('hi')">हिंदी (Hindi)</button>
+                <button class="secondary-btn" onclick="setLanguage('es')">Español (Spanish)</button>
+                <button class="secondary-btn" style="margin-top: 20px;" onclick="changeScreen('landingScreen')"><span id="lang-cancel">Cancel</span></button>
+            </div>
+        </div>
+
+        <div id="dashboardScreen" class="screen">
+            <div class="menu-card">
+                <h1 id="welcomeText">Welcome!</h1>
+                <button id="createBtn"><span id="dash-create">Create Private Game</span></button>
+                <p class="divider">— OR —</p>
+                <input type="text" id="roomInput" placeholder="CODE" maxlength="4" style="text-transform: uppercase;">
+                <button id="joinBtn"><span id="dash-join">Join Game</span></button>
+            </div>
+        </div>
+
+        <div id="gameArea" class="screen">
+            <h3 id="roomDisplay"></h3>
+            <div id="myBoard"></div>
+        </div>
+
+    </main>
 
     <script>
-        // Init board
-        var b1 = Chessboard('board1', 'start');
-        var game = new Chess();
+        // 1. Screen swapping logic
+        function changeScreen(screenId, element = null) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active-screen');
+            });
+            document.getElementById(screenId).classList.add('active-screen');
 
-        // Screen logic
-        function showScreen(id) {
-            $('.screen').removeClass('active');
-            $('#' + id).addClass('active');
+            if (element) {
+                document.querySelectorAll('.menu-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                element.classList.add('active');
+            }
         }
 
-        // Animation logic
-        function animateBoard() {
-            game.reset();
-            const moves = ['e4', 'e5', 'Bc4', 'Nc6', 'Qh5', 'Nf6', 'Qxf7#'];
-            let i = 0;
-            let interval = setInterval(() => {
-                if(i < moves.length) {
-                    game.move(moves[i]);
-                    b1.position(game.fen());
-                    i++;
-                } else { clearInterval(interval); }
-            }, 800);
+        function handleLogin() {
+            const username = document.getElementById('usernameInput').value;
+            if(username.trim() !== "") {
+                document.getElementById('welcomeText').innerText = "Welcome, " + username + "!";
+            } else {
+                document.getElementById('welcomeText').innerText = "Welcome, Guest!";
+            }
+            changeScreen('dashboardScreen');
+        }
+
+        // 2. THE TRANSLATION DICTIONARY
+        const translations = {
+            en: {
+                "nav-play": "Play", "nav-puzzles": "Puzzles", "nav-learn": "Learn", 
+                "nav-login": "Login", "nav-signup": "Sign Up", "nav-lang": "Language",
+                "landing-title": 'Play First <span style="color:#81b64c;">Indian</span> Chess On A Site!',
+                "landing-sub": "play with playerss and train your chess performance!",
+                "landing-btn": "Get Started!", "login-title": "Player Login",
+                "login-btn": "Login", "login-or": "Don't have an account?", "login-create": "Create Account",
+                "signup-title": "Sign Up", "signup-btn": "Register", "lang-title": "Choose Language",
+                "lang-cancel": "Cancel", "dash-create": "Create Private Game", "dash-join": "Join Game"
+            },
+            hi: {
+                "nav-play": "खेलें", "nav-puzzles": "पहेलियाँ", "nav-learn": "सीखें", 
+                "nav-login": "लॉग इन", "nav-signup": "साइन अप", "nav-lang": "भाषा",
+                "landing-title": 'एक साइट पर पहला <span style="color:#81b64c;">भारतीय</span> शतरंज खेलें!',
+                "landing-sub": "खिलाड़ियों के साथ खेलें और अपने शतरंज प्रदर्शन को प्रशिक्षित करें!",
+                "landing-btn": "शुरू करें!", "login-title": "खिलाड़ी लॉग इन",
+                "login-btn": "लॉग इन", "login-or": "क्या आपके पास खाता नहीं है?", "login-create": "खाता बनाएं",
+                "signup-title": "साइन अप", "signup-btn": "रजिस्टर करें", "lang-title": "भाषा चुनें",
+                "lang-cancel": "रद्द करें", "dash-create": "प्राइवेट गेम बनाएं", "dash-join": "गेम से जुड़ें"
+            },
+            es: {
+                "nav-play": "Jugar", "nav-puzzles": "Problemas", "nav-learn": "Aprender", 
+                "nav-login": "Acceso", "nav-signup": "Regístrate", "nav-lang": "Idioma",
+                "landing-title": '¡Juega al primer ajedrez <span style="color:#81b64c;">indio</span> en un sitio!',
+                "landing-sub": "¡juega con jugadores y entrena tu rendimiento en el ajedrez!",
+                "landing-btn": "¡Empezar!", "login-title": "Acceso de jugador",
+                "login-btn": "Acceso", "login-or": "¿No tienes una cuenta?", "login-create": "Crear Cuenta",
+                "signup-title": "Regístrate", "signup-btn": "Registrarse", "lang-title": "Elige Idioma",
+                "lang-cancel": "Cancelar", "dash-create": "Crear partida privada", "dash-join": "Unirse a la partida"
+            }
+        };
+
+        // 3. The function that updates the text on the screen
+        function setLanguage(lang) {
+            for (let key in translations[lang]) {
+                let element = document.getElementById(key);
+                if (element) {
+                    element.innerHTML = translations[lang][key];
+                }
+            }
+            // Kick the user back to the home screen after picking a language
+            changeScreen('landingScreen');
         }
     </script>
+
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="client.js"></script>
+
 </body>
 </html>
