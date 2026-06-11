@@ -43,12 +43,6 @@ io.on('connection', (socket) => {
     });
 });
 
-// Start the server
-const PORT = 3000;
-server.listen(PORT, () => {
-    console.log(`Server is successfully running on http://localhost:${PORT}`);
-});
-
 // NEW: Let Render choose the port but default to 3000 on your laptop
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
