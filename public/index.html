@@ -6,15 +6,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* --- NEW: THE APP LAYOUT --- */
         body { 
             background-color: #312e2b; 
             color: #ffffff; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             margin: 0;
-            display: flex; /* Splits the screen side-by-side */
+            display: flex; 
             height: 100vh;
-            overflow: hidden; /* Prevents the whole page from scrolling */
+            overflow: hidden; 
         }
 
         /* --- THE SIDEBAR --- */
@@ -38,6 +37,16 @@
             letter-spacing: 1px;
         }
 
+        /* NEW: Grouping the top menu so we can push the bottom menu down */
+        .sidebar-nav {
+            flex-grow: 1; /* This pushes the bottom section all the way down */
+        }
+
+        .sidebar-bottom {
+            border-top: 1px solid #403d39;
+            padding-top: 15px;
+        }
+
         .menu-item {
             display: flex;
             align-items: center;
@@ -52,34 +61,22 @@
             transition: all 0.2s ease;
         }
 
-        .menu-item i {
-            margin-right: 15px;
-            font-size: 22px;
-            width: 30px;
-            text-align: center;
-        }
-
-        .menu-item:hover {
-            background-color: #3d3b39;
-            color: #ffffff;
-            transform: translateX(5px); /* Tiny slide animation on hover */
-        }
-
-        /* The active menu item gets the green highlight */
+        .menu-item i { margin-right: 15px; font-size: 22px; width: 30px; text-align: center; }
+        .menu-item:hover { background-color: #3d3b39; color: #ffffff; transform: translateX(5px); }
         .menu-item.active { background-color: #312e2b; color: #ffffff; }
         .menu-item.active i { color: #81b64c; }
 
-        /* --- THE MAIN CONTENT AREA --- */
+        /* --- MAIN CONTENT AREA --- */
         #main-content {
-            flex-grow: 1; /* Takes up the rest of the screen */
+            flex-grow: 1; 
             padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow-y: auto; /* Allows scrolling only inside the main area if needed */
+            overflow-y: auto; 
         }
 
-        /* --- SCREEN SYSTEM (Kept exactly the same) --- */
+        /* --- SCREENS --- */
         .screen { display: none; width: 100%; align-items: center; justify-content: center; }
         .active-screen { display: flex; }
 
@@ -95,6 +92,9 @@
 
         button { background-color: #81b64c; color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; transition: background 0.2s, transform 0.1s; margin-bottom: 10px; }
         button:hover { background-color: #92c959; transform: translateY(-2px); }
+        .secondary-btn { background-color: #403d39; }
+        .secondary-btn:hover { background-color: #524f4a; }
+        
         #getStartedBtn { background-color: #ffffff; color: #312e2b; font-size: 18px; padding: 18px 30px; width: auto; border-radius: 10px; }
         #getStartedBtn:hover { background-color: #e0e0e0; }
 
@@ -106,11 +106,11 @@
         #roomDisplay { background-color: #262421; padding: 10px; border-radius: 8px; color: #81b64c; margin-bottom: 20px; }
         #myBoard { border-radius: 4px; overflow: hidden; box-shadow: 0 15px 30px rgba(0,0,0,0.6); }
 
-        /* Collapse sidebar on mobile */
         @media (max-width: 768px) {
             body { flex-direction: column; }
-            #sidebar { width: 100%; flex-direction: row; justify-content: space-around; padding: 10px 0; }
-            .brand-logo { display: none; }
+            #sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: space-around; padding: 10px 0; }
+            .brand-logo, .sidebar-bottom { display: none; } /* Hide bottom stuff on tiny screens to save space */
+            .sidebar-nav { display: flex; width: 100%; justify-content: space-around; }
             .menu-item { padding: 10px; margin: 0; font-size: 14px; }
             .menu-item i { margin-right: 5px; font-size: 18px; }
             #landingScreen { flex-direction: column; text-align: center; }
@@ -123,18 +123,29 @@
     <nav id="sidebar">
         <div class="brand-logo">♔ CHESS</div>
         
-        <a class="menu-item active" onclick="changeScreen('landingScreen')">
-            <i class="fa-solid fa-hand-pointer"></i> Play
-        </a>
-        <a class="menu-item" onclick="alert('Puzzles coming soon!')">
-            <i class="fa-solid fa-puzzle-piece"></i> Puzzles
-        </a>
-        <a class="menu-item" onclick="alert('Lessons coming soon!')">
-            <i class="fa-solid fa-graduation-cap"></i> Learn
-        </a>
-        <a class="menu-item" onclick="alert('Training routines coming soon!')">
-            <i class="fa-solid fa-dumbbell"></i> Train
-        </a>
+        <div class="sidebar-nav">
+            <a class="menu-item active" onclick="changeScreen('landingScreen', this)">
+                <i class="fa-solid fa-hand-pointer"></i> Play
+            </a>
+            <a class="menu-item" onclick="alert('Puzzles coming soon!')">
+                <i class="fa-solid fa-puzzle-piece"></i> Puzzles
+            </a>
+            <a class="menu-item" onclick="alert('Lessons coming soon!')">
+                <i class="fa-solid fa-graduation-cap"></i> Learn
+            </a>
+        </div>
+
+        <div class="sidebar-bottom">
+            <a class="menu-item" onclick="changeScreen('loginScreen', this)">
+                <i class="fa-solid fa-right-to-bracket"></i> Login
+            </a>
+            <a class="menu-item" onclick="changeScreen('signupScreen', this)">
+                <i class="fa-solid fa-user-plus"></i> Sign Up
+            </a>
+            <a class="menu-item" onclick="changeScreen('languageScreen', this)">
+                <i class="fa-solid fa-globe"></i> Language
+            </a>
+        </div>
     </nav>
 
     <main id="main-content">
@@ -155,7 +166,27 @@
                 <input type="password" id="passwordInput" placeholder="Password">
                 <button onclick="handleLogin()">Login</button>
                 <p class="divider">Don't have an account?</p>
-                <button style="background-color: #403d39;" onclick="handleLogin()">Play as Guest</button>
+                <button class="secondary-btn" onclick="changeScreen('signupScreen')">Create Account</button>
+            </div>
+        </div>
+
+        <div id="signupScreen" class="screen">
+            <div class="menu-card">
+                <h1>Sign Up</h1>
+                <input type="text" id="newUsername" placeholder="Choose a Username">
+                <input type="email" id="newEmail" placeholder="Email Address">
+                <input type="password" id="newPassword" placeholder="Create Password">
+                <button onclick="alert('Account created! Please log in.'); changeScreen('loginScreen');">Register</button>
+            </div>
+        </div>
+
+        <div id="languageScreen" class="screen">
+            <div class="menu-card">
+                <h1>Choose Language</h1>
+                <button onclick="alert('Language changed to English!'); changeScreen('landingScreen');">English</button>
+                <button class="secondary-btn" onclick="alert('Language changed to Hindi!'); changeScreen('landingScreen');">हिंदी (Hindi)</button>
+                <button class="secondary-btn" onclick="alert('Language changed to Spanish!'); changeScreen('landingScreen');">Español (Spanish)</button>
+                <button class="secondary-btn" style="margin-top: 20px;" onclick="changeScreen('landingScreen')">Cancel</button>
             </div>
         </div>
 
@@ -177,11 +208,22 @@
     </main>
 
     <script>
-        function changeScreen(screenId) {
+        // Updated to also move the green "active" highlight to the clicked sidebar menu
+        function changeScreen(screenId, element = null) {
+            // Hide all screens
             document.querySelectorAll('.screen').forEach(screen => {
                 screen.classList.remove('active-screen');
             });
+            // Show the target screen
             document.getElementById(screenId).classList.add('active-screen');
+
+            // If a sidebar link was clicked, move the active highlight
+            if (element) {
+                document.querySelectorAll('.menu-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                element.classList.add('active');
+            }
         }
 
         function handleLogin() {
