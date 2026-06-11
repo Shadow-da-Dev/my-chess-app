@@ -74,9 +74,16 @@
     </main>
 
     <script>
-        // Init Animation Board
-        var animBoard = Chessboard('animBoard', 'start');
-        var game = new Chess();
+       // In client.js, find your 'var board' and add the pieceTheme line:
+var board = Chessboard('myBoard', {
+    draggable: true,
+    dropOffBoard: 'snapback',
+    position: 'start',
+    // ADD THIS LINE BELOW:
+    pieceTheme: 'https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/img/chesspieces/wikipedia/{piece}.png',
+    onDragStart: handleDragStart,
+    onDrop: handleMove
+});
 
         function playCheckmateAnimation() {
             game.reset();
