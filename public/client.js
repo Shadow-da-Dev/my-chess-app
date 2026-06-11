@@ -1,39 +1,53 @@
-// 1. Connect to the real-time server
 const socket = io();
-let board = null;
+let myRoomCode = "";
 
-// 2. What happens when a player drops a piece?
-function onDrop(source, target) {
-    // Package the move data
-    const move = {
-        from: source,
-        to: target,
-        promotion: 'q' // Always promote to a queen for simplicity right now
-    };
-
-    // Send the move to our server to see if it is legal
-    socket.emit('move', move);
-}
-
-// 3. Configure the visual board
-const config = {
+// 1. Setup the basic visual board
+var board = Chessboard('myBoard', {
     draggable: true,
+    dropOffBoard: 'snapback',
     position: 'start',
-    // NEW: Tell it to grab the piece images from the chessboard.js website!
-    pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
-    onDrop: onDrop
-}
-
-// 4. Draw the board on the screen
-board = Chessboard('myBoard', config);
-
-// 5. Listen for the official board state from the server
-socket.on('boardState', (fenString) => {
-    // Update our visual board to match the server's exact layout
-    board.position(fenString);
+    onDrop: handleMove
 });
 
-// 6. If the server says our move was illegal, log it
-socket.on('invalidMove', (move) => {
-    console.log("The server rejected that move:", move);
+// 2. Handle dragging a piece
+function handleMove(source, target) {
+    // Send the move AND our specific room code to the server
+    socket.emit('move', {
+        room: myRoomCode,
+        move: { source: source, target: target }
+    });
+}
+
+// 3. Receive a move from our opponent
+socket.on('move', function(move) {
+    board.move(move.source + '-' + move.target);
+});
+
+// --- NEW LOBBY LOGIC ---
+
+// Click "Create Private Game"
+document.getElementById('createBtn').addEventListener('click', () => {
+    socket.emit('createRoom');
+});
+
+// Click "Join Game"
+document.getElementById('joinBtn').addEventListener('click', () => {
+    const code = document.getElementById('roomInput').value.toUpperCase();
+    if (code) {
+        socket.emit('joinRoom', code);
+    }
+});
+
+// When the server successfully puts us in a room
+socket.on('roomJoined', (code) => {
+    myRoomCode = code;
+    // Hide the lobby menu and show the chessboard
+    document.getElementById('lobby').style.display = 'none';
+    document.getElementById('gameArea').style.display = 'block';
+    document.getElementById('roomDisplay').innerText = "Room Code: " + code;
+});
+
+// If we type the wrong code
+socket.on('errorMsg', (msg) => {
+    alert(msg);
 });
