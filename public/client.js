@@ -83,8 +83,13 @@ document.getElementById('joinBtn').addEventListener('click', () => {
 
 socket.on('roomJoined', (code) => {
     myRoomCode = code;
-    document.getElementById('lobby').style.display = 'none';
-    document.getElementById('gameArea').style.display = 'block';
+    
+    // Use our new screen-swapping system to show the board
+    document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.remove('active-screen');
+    });
+    document.getElementById('gameArea').classList.add('active-screen');
+    
     document.getElementById('roomDisplay').innerText = "Room Code: " + code;
 });
 
