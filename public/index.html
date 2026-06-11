@@ -1,46 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Chess</title>
+    <title>Multiplayer Chess</title>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     
     <style>
         body { background: #312e2b; color: white; font-family: sans-serif; margin: 0; display: flex; height: 100vh; }
-        #sidebar { width: 200px; background: #262421; padding: 20px; }
-        .nav-link { cursor: pointer; padding: 10px; display: block; color: #ccc; }
-        .nav-link:hover { color: #81b64c; }
+        
+        /* Sidebar */
+        #sidebar { width: 220px; background: #262421; padding: 20px; display: flex; flex-direction: column; }
+        .nav-link { cursor: pointer; padding: 15px; color: #ccc; font-weight: bold; border-radius: 8px; }
+        .nav-link:hover { background: #3d3b39; color: white; }
+        
+        /* Screens */
         #main { flex-grow: 1; display: flex; justify-content: center; align-items: center; }
-        .screen { display: none; }
+        .screen { display: none; text-align: center; }
         .active { display: block; }
-        button { background: #81b64c; border: none; padding: 10px 20px; color: white; cursor: pointer; border-radius: 4px; }
+        
+        button { background: #81b64c; border: none; padding: 12px 25px; color: white; cursor: pointer; border-radius: 5px; font-weight: bold; margin: 5px; }
+        input { padding: 10px; border-radius: 5px; border: 1px solid #403d39; background: #262421; color: white; }
     </style>
 </head>
 <body>
 
     <nav id="sidebar">
-        <div class="nav-link" onclick="showScreen('landing')">Play</div>
-        <div class="nav-link" onclick="showScreen('login')">Login</div>
+        <h2 style="color: #81b64c;">♔ CHESS</h2>
+        <div class="nav-link" onclick="showScreen('landing')"><i class="fa fa-home"></i> Play</div>
+        <div class="nav-link" onclick="showScreen('login')"><i class="fa fa-user"></i> Login</div>
     </nav>
 
     <div id="main">
         <div id="landing" class="screen active">
-            <div id="board1" style="width: 300px;"></div>
+            <div id="board1" style="width: 300px; margin: 0 auto;"></div>
             <h2>Play Indian Chess</h2>
             <button onclick="showScreen('login')">Get Started!</button>
-            <button onclick="animateBoard()">Watch Checkmate</button>
+            <button onclick="animateBoard()" style="background:#403d39">Watch Checkmate</button>
         </div>
 
         <div id="login" class="screen">
+            <h2>Login</h2>
             <input type="text" id="user" placeholder="Username"><br>
-            <button onclick="loginSuccess()">Login</button>
+            <button onclick="showScreen('dashboard')">Login</button>
         </div>
 
         <div id="dashboard" class="screen">
             <h1>Welcome!</h1>
-            <button id="createBtn">Create Game</button>
+            <button id="createBtn">Create Private Game</button>
         </div>
     </div>
 
@@ -49,15 +58,13 @@
         var b1 = Chessboard('board1', 'start');
         var game = new Chess();
 
-        // Simple screen swapper
+        // Screen logic
         function showScreen(id) {
             $('.screen').removeClass('active');
             $('#' + id).addClass('active');
         }
 
-        // Logic
-        function loginSuccess() { showScreen('dashboard'); }
-
+        // Animation logic
         function animateBoard() {
             game.reset();
             const moves = ['e4', 'e5', 'Bc4', 'Nc6', 'Qh5', 'Nf6', 'Qxf7#'];
@@ -71,5 +78,7 @@
             }, 800);
         }
     </script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
 </body>
 </html>
