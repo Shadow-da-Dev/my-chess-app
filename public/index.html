@@ -3,132 +3,116 @@
 <head>
     <title>Multiplayer Chess</title>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        /* The Main Background */
+        /* --- NEW: THE APP LAYOUT --- */
         body { 
             background-color: #312e2b; 
             color: #ffffff; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            margin: 0;
+            display: flex; /* Splits the screen side-by-side */
+            height: 100vh;
+            overflow: hidden; /* Prevents the whole page from scrolling */
+        }
+
+        /* --- THE SIDEBAR --- */
+        #sidebar {
+            width: 220px;
+            background-color: #262421;
+            padding: 20px 10px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.4);
+            z-index: 100;
         }
 
-        /* NEW: System to handle multiple screens */
-        .screen {
-            display: none; /* Everything is hidden by default */
-            width: 100%;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .active-screen {
-            display: flex; /* Only the active screen shows */
+        .brand-logo {
+            font-size: 24px;
+            font-weight: 900;
+            color: #81b64c;
+            text-align: center;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        /* --- SCREEN 1: LANDING LAYOUT --- */
-        #landingScreen {
-            flex-direction: row;
-            gap: 60px;
-            max-width: 1000px;
-        }
-
-        .hero-graphic {
-            background-color: #262421;
-            width: 300px;
-            height: 300px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        .menu-item {
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 100px;
+            padding: 15px 20px;
+            color: #c3c2c1;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
 
+        .menu-item i {
+            margin-right: 15px;
+            font-size: 22px;
+            width: 30px;
+            text-align: center;
+        }
+
+        .menu-item:hover {
+            background-color: #3d3b39;
+            color: #ffffff;
+            transform: translateX(5px); /* Tiny slide animation on hover */
+        }
+
+        /* The active menu item gets the green highlight */
+        .menu-item.active { background-color: #312e2b; color: #ffffff; }
+        .menu-item.active i { color: #81b64c; }
+
+        /* --- THE MAIN CONTENT AREA --- */
+        #main-content {
+            flex-grow: 1; /* Takes up the rest of the screen */
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto; /* Allows scrolling only inside the main area if needed */
+        }
+
+        /* --- SCREEN SYSTEM (Kept exactly the same) --- */
+        .screen { display: none; width: 100%; align-items: center; justify-content: center; }
+        .active-screen { display: flex; }
+
+        #landingScreen { flex-direction: row; gap: 60px; max-width: 1000px; }
+        .hero-graphic { background-color: #262421; width: 300px; height: 300px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 100px; }
         .branding-panel { max-width: 450px; text-align: left; }
         .branding-panel h2 { font-size: 46px; font-weight: 900; line-height: 1.1; margin: 0 0 15px 0; }
         .branding-panel h2 span { color: #81b64c; }
         .branding-panel p { font-size: 20px; color: #a7a6a2; line-height: 1.4; margin-bottom: 30px; }
 
-        /* --- SCREEN 2 & 3: MENU CARDS (Login & Dashboard) --- */
-        .menu-card { 
-            background-color: #262421; 
-            padding: 40px; 
-            border-radius: 12px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
-            width: 100%;
-            max-width: 350px;
-            text-align: center;
-            flex-direction: column;
-        }
+        .menu-card { background-color: #262421; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 100%; max-width: 350px; text-align: center; flex-direction: column; }
+        .menu-card h1 { color: #81b64c; margin: 0 0 25px 0; font-size: 28px; text-transform: uppercase; }
 
-        .menu-card h1 { 
-            color: #81b64c; 
-            margin: 0 0 25px 0;
-            font-size: 28px;
-            text-transform: uppercase;
-        }
-
-        /* --- BUTTONS & INPUTS --- */
-        button { 
-            background-color: #81b64c; 
-            color: white; 
-            border: none; 
-            padding: 15px; 
-            font-size: 16px; 
-            font-weight: bold; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            width: 100%; 
-            transition: background 0.2s, transform 0.1s; 
-            margin-bottom: 10px;
-        }
+        button { background-color: #81b64c; color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; transition: background 0.2s, transform 0.1s; margin-bottom: 10px; }
         button:hover { background-color: #92c959; transform: translateY(-2px); }
-
-        #getStartedBtn {
-            background-color: #ffffff;
-            color: #312e2b;
-            font-size: 18px;
-            padding: 18px 30px;
-            width: auto;
-            border-radius: 10px;
-        }
+        #getStartedBtn { background-color: #ffffff; color: #312e2b; font-size: 18px; padding: 18px 30px; width: auto; border-radius: 10px; }
         #getStartedBtn:hover { background-color: #e0e0e0; }
 
-        input { 
-            background-color: #312e2b;
-            color: white;
-            border: 2px solid #403d39;
-            padding: 15px; 
-            font-size: 16px; 
-            border-radius: 8px; 
-            width: 100%; 
-            margin-bottom: 15px; 
-            box-sizing: border-box;
-            outline: none;
-            text-align: center;
-            font-weight: bold;
-        }
+        input { background-color: #312e2b; color: white; border: 2px solid #403d39; padding: 15px; font-size: 16px; border-radius: 8px; width: 100%; margin-bottom: 15px; box-sizing: border-box; outline: none; text-align: center; font-weight: bold; }
         input:focus { border-color: #81b64c; }
-
         .divider { color: #888888; font-size: 14px; margin: 15px 0; font-weight: bold; }
 
-        /* --- SCREEN 4: GAME AREA --- */
         #gameArea { flex-direction: column; max-width: 450px; }
-        #roomDisplay { 
-            background-color: #262421; 
-            padding: 10px; 
-            border-radius: 8px; 
-            color: #81b64c;
-            margin-bottom: 20px; 
-        }
+        #roomDisplay { background-color: #262421; padding: 10px; border-radius: 8px; color: #81b64c; margin-bottom: 20px; }
         #myBoard { border-radius: 4px; overflow: hidden; box-shadow: 0 15px 30px rgba(0,0,0,0.6); }
 
+        /* Collapse sidebar on mobile */
         @media (max-width: 768px) {
+            body { flex-direction: column; }
+            #sidebar { width: 100%; flex-direction: row; justify-content: space-around; padding: 10px 0; }
+            .brand-logo { display: none; }
+            .menu-item { padding: 10px; margin: 0; font-size: 14px; }
+            .menu-item i { margin-right: 5px; font-size: 18px; }
             #landingScreen { flex-direction: column; text-align: center; }
             .branding-panel { text-align: center; }
         }
@@ -136,43 +120,63 @@
 </head>
 <body>
 
-    <div id="landingScreen" class="screen active-screen">
-        <div class="hero-graphic">♞</div>
-        <div class="branding-panel">
-            <h2>Play On First <span>Indian</span> Chess Site!</h2>
-            <p>play with playerss and train your chess performance!</p>
-            <button id="getStartedBtn" onclick="changeScreen('loginScreen')">Get Started!</button>
-        </div>
-    </div>
+    <nav id="sidebar">
+        <div class="brand-logo">♔ CHESS</div>
+        
+        <a class="menu-item active" onclick="changeScreen('landingScreen')">
+            <i class="fa-solid fa-hand-pointer"></i> Play
+        </a>
+        <a class="menu-item" onclick="alert('Puzzles coming soon!')">
+            <i class="fa-solid fa-puzzle-piece"></i> Puzzles
+        </a>
+        <a class="menu-item" onclick="alert('Lessons coming soon!')">
+            <i class="fa-solid fa-graduation-cap"></i> Learn
+        </a>
+        <a class="menu-item" onclick="alert('Training routines coming soon!')">
+            <i class="fa-solid fa-dumbbell"></i> Train
+        </a>
+    </nav>
 
-    <div id="loginScreen" class="screen">
-        <div class="menu-card">
-            <h1>Player Login</h1>
-            <input type="text" id="usernameInput" placeholder="Enter Username">
-            <input type="password" id="passwordInput" placeholder="Password">
-            <button onclick="handleLogin()">Login</button>
-            <p class="divider">Don't have an account?</p>
-            <button style="background-color: #403d39;" onclick="handleLogin()">Play as Guest</button>
+    <main id="main-content">
+        
+        <div id="landingScreen" class="screen active-screen">
+            <div class="hero-graphic">♞</div>
+            <div class="branding-panel">
+                <h2>Play First <span>Indian</span> Chess On A Site!</h2>
+                <p>play with playerss and train your chess performance!</p>
+                <button id="getStartedBtn" onclick="changeScreen('loginScreen')">Get Started!</button>
+            </div>
         </div>
-    </div>
 
-    <div id="dashboardScreen" class="screen">
-        <div class="menu-card">
-            <h1 id="welcomeText">Welcome!</h1>
-            <button id="createBtn">Create Private Game</button>
-            <p class="divider">— OR —</p>
-            <input type="text" id="roomInput" placeholder="Enter 4-Letter Code" maxlength="4" style="text-transform: uppercase;">
-            <button id="joinBtn">Join Game</button>
+        <div id="loginScreen" class="screen">
+            <div class="menu-card">
+                <h1>Player Login</h1>
+                <input type="text" id="usernameInput" placeholder="Enter Username">
+                <input type="password" id="passwordInput" placeholder="Password">
+                <button onclick="handleLogin()">Login</button>
+                <p class="divider">Don't have an account?</p>
+                <button style="background-color: #403d39;" onclick="handleLogin()">Play as Guest</button>
+            </div>
         </div>
-    </div>
 
-    <div id="gameArea" class="screen">
-        <h3 id="roomDisplay"></h3>
-        <div id="myBoard"></div>
-    </div>
+        <div id="dashboardScreen" class="screen">
+            <div class="menu-card">
+                <h1 id="welcomeText">Welcome!</h1>
+                <button id="createBtn">Create Private Game</button>
+                <p class="divider">— OR —</p>
+                <input type="text" id="roomInput" placeholder="Enter 4-Letter Code" maxlength="4" style="text-transform: uppercase;">
+                <button id="joinBtn">Join Game</button>
+            </div>
+        </div>
+
+        <div id="gameArea" class="screen">
+            <h3 id="roomDisplay"></h3>
+            <div id="myBoard"></div>
+        </div>
+
+    </main>
 
     <script>
-        // Smoothly hide all screens and show the one we want
         function changeScreen(screenId) {
             document.querySelectorAll('.screen').forEach(screen => {
                 screen.classList.remove('active-screen');
@@ -180,16 +184,13 @@
             document.getElementById(screenId).classList.add('active-screen');
         }
 
-        // Handle the login button click
         function handleLogin() {
             const username = document.getElementById('usernameInput').value;
-            
             if(username.trim() !== "") {
                 document.getElementById('welcomeText').innerText = "Welcome, " + username + "!";
             } else {
                 document.getElementById('welcomeText').innerText = "Welcome, Guest!";
             }
-
             changeScreen('dashboardScreen');
         }
     </script>
