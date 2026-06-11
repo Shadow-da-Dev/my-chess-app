@@ -1,38 +1,93 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Multiplayer Chess</title>
-    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-        #lobby { margin-bottom: 20px; }
-        input, button { padding: 10px; font-size: 16px; margin: 5px; cursor: pointer; }
-        #gameArea { display: none; }
-        #myBoard { width: 400px; margin: 0 auto; }
-    </style>
-</head>
-<body>
-    <h1>Multiplayer Chess</h1>
+const socket = io();
+let myRoomCode = "";
+let myColor = "w"; // Default to white
+const game = new Chess(); 
 
-    <div id="lobby">
-        <button id="createBtn">Create Private Game</button>
-        <p>— OR —</p>
-        <input type="text" id="roomInput" placeholder="Enter 4-Letter Code">
-        <button id="joinBtn">Join Game</button>
-    </div>
+var board = Chessboard('myBoard', {
+    draggable: true,
+    dropOffBoard: 'snapback',
+    position: 'start',
+    onDragStart: handleDragStart,
+    onDrop: handleMove
+});
 
-    <div id="gameArea">
-        <h3 id="roomDisplay"></h3>
-        <div id="myBoard"></div>
-    </div>
+// NEW: Receive our color from the server
+socket.on('playerColor', (color) => {
+    myColor = color;
+    // If we are black, physically flip the board!
+    if (myColor === 'b') {
+        board.orientation('black');
+    }
+});
 
-    <script src="/socket.io/socket.io.js"></script>
-    
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-    
-    <script src="client.js"></script>
-</body>
-</html>
+// NEW: Strict dragging rules
+function handleDragStart(source, piece, position, orientation) {
+    if (game.game_over()) return false;
+
+    // 1. You cannot move if it is not your turn
+    if (game.turn() !== myColor) return false;
+
+    // 2. You cannot touch the opponent's pieces
+    if ((myColor === 'w' && piece.search(/^b/) !== -1) ||
+        (myColor === 'b' && piece.search(/^w/) !== -1)) {
+        return false;
+    }
+}
+
+function handleMove(source, target) {
+    let move = game.move({
+        from: source,
+        to: target,
+        promotion: 'q' 
+    });
+
+    if (move === null) return 'snapback';
+
+    socket.emit('move', {
+        room: myRoomCode,
+        move: { source: source, target: target }
+    });
+
+    checkGameStatus();
+}
+
+socket.on('move', function(moveData) {
+    game.move({
+        from: moveData.source,
+        to: moveData.target,
+        promotion: 'q'
+    });
+    board.position(game.fen()); 
+    checkGameStatus();
+});
+
+function checkGameStatus() {
+    if (game.in_checkmate()) {
+        alert("Game Over! Checkmate.");
+    } else if (game.in_draw() || game.in_stalemate()) {
+        alert("Game Over! Draw.");
+    }
+}
+
+// --- LOBBY LOGIC ---
+document.getElementById('createBtn').addEventListener('click', () => {
+    socket.emit('createRoom');
+});
+
+document.getElementById('joinBtn').addEventListener('click', () => {
+    const code = document.getElementById('roomInput').value.toUpperCase();
+    if (code) {
+        socket.emit('joinRoom', code);
+    }
+});
+
+socket.on('roomJoined', (code) => {
+    myRoomCode = code;
+    document.getElementById('lobby').style.display = 'none';
+    document.getElementById('gameArea').style.display = 'block';
+    document.getElementById('roomDisplay').innerText = "Room Code: " + code;
+});
+
+socket.on('errorMsg', (msg) => {
+    alert(msg);
+});
